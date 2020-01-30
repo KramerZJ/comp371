@@ -111,9 +111,9 @@ int createVertexArrayObject()
 {
 	// A vertex is a point on a polygon, it contains positions and other data (eg: colors)
 	glm::vec3 vertexArray[] = {
-		glm::vec3(-1.0f, 0.0f, 0.0f),
+		glm::vec3(-50.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f,  1.0f, 0.0f),//
-		glm::vec3(1.0f, 0.0f, 0.0f),
+		glm::vec3(50.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f,  1.0f, 0.0f),// yellow x grip
 		glm::vec3(0.0f, 0.0f, -1.0f),
 		glm::vec3(1.0f,  1.0f, 0.0f),//
@@ -222,7 +222,7 @@ int main(int argc, char*argv[])
 	// Entering Main Loop
 	glm::mat4 gripMatrix = glm::mat4(1.0f);
 	glm::mat4 gripXTranslateMatrix = glm::mat4(1.0f);
-	glm::mat4 gripYScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 0.0f, 0.0f));
+	glm::mat4 gripYScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 	while (!glfwWindowShouldClose(window))
 	{
 		// Each frame, reset color of each pixel to glClearColor
@@ -241,7 +241,7 @@ int main(int argc, char*argv[])
 		
 		for (int i = 0; i < 100;i++) {
 			gripXTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -50.0f+i));
-			gripMatrix = gripXTranslateMatrix * gripYScalingMatrix;
+			gripMatrix = gripXTranslateMatrix * gripYScalingMatrix * gripMatrix;
 			glUniformMatrix4fv(worldMatrixLoaction,1,GL_FALSE,&gripMatrix[0][0]);
 			glDrawArrays(GL_LINES, 0, 2);
 		}
