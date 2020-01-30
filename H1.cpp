@@ -115,10 +115,18 @@ int createVertexArrayObject()
 		glm::vec3(1.0f,  1.0f, 0.0f),//
 		glm::vec3(1.0f, 0.0f, 0.0f),
 		glm::vec3(1.0f,  1.0f, 0.0f),// yellow x grip
-		glm::vec3(0.0f, 0.0f, -1.0f),
-		glm::vec3(1.0f,  1.0f, 0.0f),//
-		glm::vec3(0.0f, 0.0f, 1.0f),
-		glm::vec3(1.0f,  1.0f, 0.0f),// yellow Z grip  index 3
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.0f,  0.0f, 0.0f),//
+		glm::vec3(0.0f, 0.0f, 5.0f),
+		glm::vec3(1.0f,  0.0f, 0.0f),// Z axis  index 3
+		glm::vec3(0.0f, 0.0f, 0.0f),// index 4
+		glm::vec3(0.0f,  1.0f, 0.0f),//
+		glm::vec3(0.0f, 5.0f, 0.0f),
+		glm::vec3(0.0f,  1.0f, 0.0f),// Y axis index 5
+		glm::vec3(0.0f, 0.0f, 0.0f),// index 6
+		glm::vec3(0.0f,  0.0f, 1.0f),//
+		glm::vec3(5.0f, 0.0f, 0.0f),
+		glm::vec3(0.0f,  0.0f, 1.0f),// X axis index 7
 		glm::vec3(0.0f,  0.5f, 0.03f),  // top center position
 		glm::vec3(1.0f,  0.0f, 0.0f),  // top center color (red)
 		glm::vec3(0.5f, -0.5f, 0.03f),  // bottom right
@@ -201,6 +209,7 @@ int main(int argc, char*argv[])
 
 	// Black background
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	
 
 	// Compile and link shaders here ...
 	int shaderProgram = compileAndLinkShaders();
@@ -218,13 +227,14 @@ int main(int argc, char*argv[])
 	float speed = 0.6f;
 	//enable backface culling
 	glEnable(GL_CULL_FACE);
+	glEnable(GL_DEPTH_TEST);
 	//ther aer other ways to do it and we can specify the rotation of the vertics like couter clock or clock 
 	// Entering Main Loop
 	
 	while (!glfwWindowShouldClose(window))
 	{
 		// Each frame, reset color of each pixel to glClearColor
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Draw geometry --------------------------------------------------------------------------------------------------------------
 		glUseProgram(shaderProgram);
@@ -239,17 +249,29 @@ int main(int argc, char*argv[])
 		glm::mat4 gripScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 0.0f, 0.0f));
 		glm::mat4 gripRotateMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		GLuint worldMatrixLoaction = glGetUniformLocation(shaderProgram, "worldMatrix");
-		
+		//draw grip
 		for (int i = 0; i < 100;i++) {
-			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -50.0f+i));
+			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.02f, -50.0f+i));
 			gripMatrix = gripTranslateMatrix * gripScalingMatrix;
 			glUniformMatrix4fv(worldMatrixLoaction,1,GL_FALSE,&gripMatrix[0][0]);
 			glDrawArrays(GL_LINES, 0, 2);
-			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f + i, 0.0f, 0.0f ));
+			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f + i, -0.02f, 0.0f ));
 			gripMatrix = gripTranslateMatrix * gripRotateMatrix* gripScalingMatrix;
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &gripMatrix[0][0]);
 			glDrawArrays(GL_LINES, 0, 2);
 		}
+		//draw axis
+
+		//x
+		glm::mat4 axisMatrix = glm::mat4(1.0f);
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 6, 2);
+		//y
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 4, 2);
+		//z
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 2, 2);
 		glBindVertexArray(0);
 
 		// End Frame
