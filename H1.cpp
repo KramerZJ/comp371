@@ -220,6 +220,9 @@ int main(int argc, char*argv[])
 	glEnable(GL_CULL_FACE);
 	//ther aer other ways to do it and we can specify the rotation of the vertics like couter clock or clock 
 	// Entering Main Loop
+	glm::mat4 gripMatrix = glm::mat4(1.0f);
+	glm::mat4 gripXTranslateMatrix = glm::mat4(1.0f);
+	glm::mat4 gripYScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 0.0f, 0.0f));
 	while (!glfwWindowShouldClose(window))
 	{
 		// Each frame, reset color of each pixel to glClearColor
@@ -235,9 +238,7 @@ int main(int argc, char*argv[])
 
 
 		GLuint worldMatrixLoaction = glGetUniformLocation(shaderProgram, "worldMatrix");
-		glm::mat4 gripMatrix = glm::mat4(1.0f);
-		glm::mat4 gripXTranslateMatrix = glm::mat4(1.0f);
-		glm::mat4 gripYScalingMatrix = glm::scale(glm::mat4(1.0f),glm::vec3(50.0f,0.0f,0.0f));
+		
 		for (int i = 0; i < 100;i++) {
 			gripXTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -50.0f+i));
 			gripMatrix = gripXTranslateMatrix * gripYScalingMatrix;
@@ -254,21 +255,6 @@ int main(int argc, char*argv[])
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
-		//double xpos;
-		//double ypos;
-		//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);//mouseinput 
-		//void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-		//glfwSetCursorPosCallback(window, mouse_callback);
-		//float lastX = 400, lastY = 300;
-
-		//float xoffset = xpos - lastX;
-		//float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
-		//lastX = xpos;
-		//lastY = ypos;
-
-		//const float sensitivity = 0.05f;
-		//xoffset *= sensitivity;
-		//yoffset *= sensitivity;
 
 
 		//view setting
@@ -277,21 +263,7 @@ int main(int argc, char*argv[])
 		viewMatrix = viewTransform * viewMatrix;
 		GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
 		glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-		/*if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		{
-			viewMatrix = glm::mat4(1.0f);
 
-			GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-			glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-		}
-
-		if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-		{
-			viewMatrix = glm::lookAt(glm::vec3(-0.5f, 0.0f, 0.0f), glm::vec3(-0.5f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-
-			GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-			glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-		}*/
 		
 		//projection setting
 			glm::mat4 projectionMatrix = glm::perspective(70.0f, 800.0f / 600.0f, 0.01f, 100.0f);
@@ -300,13 +272,6 @@ int main(int argc, char*argv[])
 			glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
 		
 
-		/*if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
-		{
-			glm::mat4 projectionMatrix = glm::ortho(-4.0f, 4.0f, -3.0f, 3.0f, -100.0f, 100.0f);
-
-			GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
-			glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
-		}*/
 
 
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
