@@ -127,12 +127,7 @@ int createVertexArrayObject()
 		glm::vec3(0.0f,  0.0f, 1.0f),//
 		glm::vec3(5.0f, 0.0f, 0.0f),
 		glm::vec3(0.0f,  0.0f, 1.0f),// X axis index 7
-		glm::vec3(0.0f,  0.5f, 0.03f),  // top center position
-		glm::vec3(1.0f,  0.0f, 0.0f),  // top center color (red)
-		glm::vec3(0.5f, -0.5f, 0.03f),  // bottom right
-		glm::vec3(0.0f,  1.0f, 0.0f),  // bottom right color (green)
-		glm::vec3(-0.5f, -0.5f, 0.03f),  // bottom left
-		glm::vec3(0.0f,  0.0f, 1.0f),  // bottom left color (blue)
+		glm::vec3(-1.0f,0.0f,0.0f)
 		
 	};
 
