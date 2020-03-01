@@ -1,0 +1,8 @@
+﻿  H1.cpp
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(218,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(239,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(330,15): warning C4305: '=': truncation from 'double' to 'float'
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+LINK : warning LNK4098: defaultlib 'MSVCRT' conflicts with use of other libs; use /NODEFAULTLIB:library
+glew32s.lib(glew.obj) : warning LNK4099: PDB 'vc120.pdb' was not found with 'glew32s.lib(glew.obj)' or at 'C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Bin\vc120.pdb'; linking object as if no debug info
+  Labs.vcxproj -> C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\VS2017\/../Bin/Labs-Debug.exe
