@@ -184,7 +184,7 @@ int main(int argc, char*argv[])
 #endif
 
 	// Create Window and rendering context using GLFW, resolution is 800x600
-	GLFWwindow* window = glfwCreateWindow(800, 600, "Comp371 - Lab 02", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "Comp371 - Lab 02", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -280,7 +280,7 @@ int main(int argc, char*argv[])
 
 
 		//view setting
-		glm::mat4 viewMatrix = glm::mat4(1.0f);
+		glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, -5.0f));
 		glm::mat4 viewTransform = glm::translate(viewMatrix, glm::vec3(leftRight, upDown, forwardBack));
 		viewMatrix = viewTransform * viewMatrix;
 		GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
@@ -288,7 +288,7 @@ int main(int argc, char*argv[])
 
 		
 		//projection setting
-			glm::mat4 projectionMatrix = glm::perspective(70.0f, 800.0f / 600.0f, 0.01f, 100.0f);
+			glm::mat4 projectionMatrix = glm::perspective(70.0f, 1024.0f / 768.0f, 0.01f, 100.0f);
 
 			GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
 			glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
@@ -312,7 +312,7 @@ int main(int argc, char*argv[])
 		{
 			leftRight -= 0.1f*speed;
 		}
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 		{
 			upDown -= 0.1f*speed;
 		}
