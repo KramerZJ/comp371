@@ -1,5 +1,7 @@
 ﻿  H1.cpp
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(218,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(239,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(330,15): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(363,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(411,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(668,56): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(669,54): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(892,36): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Labs.vcxproj -> C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\VS2017\/../Bin/Labs-Debug.exe
