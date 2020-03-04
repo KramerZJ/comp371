@@ -8,7 +8,7 @@
 // - https://learnopengl.com/Getting-started/Hello-Triangle
 
 #include <iostream>
-
+#include <algorithm>
 
 #define GLEW_STATIC 1   // This allows linking with Static Library on Windows, without DLL
 #include <GL/glew.h>    // Include GLEW - OpenGL Extension Wrangler
@@ -669,7 +669,7 @@ int main(int argc, char*argv[])
 		cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
 
 		// Clamp vertical angle to [-85, 85] degrees
-		//cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
+		cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
 		if (cameraHorizontalAngle > 360)
 		{
 			cameraHorizontalAngle -= 360;
@@ -682,10 +682,10 @@ int main(int argc, char*argv[])
 		float theta = glm::radians(cameraHorizontalAngle);
 		float phi = glm::radians(cameraVerticalAngle);
 
-		cameraLookAt = glm::vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
-		glm::vec3 cameraSideVector = glm::cross(cameraLookAt, glm::vec3(0.0f, 1.0f, 0.0f));
+		//cameraLookAt = glm::vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
+		//glm::vec3 cameraSideVector = glm::cross(cameraLookAt, glm::vec3(0.0f, 1.0f, 0.0f));
 
-		glm::normalize(cameraSideVector);
+		//glm::normalize(cameraSideVector);
 		////view setting
 		//glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, -5.0f));
 		//glm::mat4 viewTransform = glm::translate(viewMatrix, glm::vec3(leftRight, upDown, forwardBack));
@@ -705,14 +705,14 @@ int main(int argc, char*argv[])
 				cameraUp);
 			float xz = pow(cameraPosition[0], 2.0f) + pow(cameraPosition[2], 2.0f);
 			float xzy = xz + pow(cameraPosition[1], 2.0f);
-			glm::vec3 olfPos(olfX, olfY, olfZ);
+			glm::vec3 olfPos(olfX, olfY+3.0f, olfZ);
 			float radius = sqrt(xzy) - radiusLeftClick;
 			cout.precision(5);
 			cout<< radius <<endl;
 			glm::vec3 Pos = olfPos - glm::vec3(radius * cosf(phi) * cosf(theta),
 				radius * sinf(phi),
 				-radius * cosf(phi) * sinf(theta));
-			viewMatrix = glm::lookAt(Pos, olfPos, cameraUp);
+			viewMatrix = glm::lookAt(Pos, olfPos, cameraUp);//viewSwitch
 			GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
 			glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
 
@@ -892,8 +892,8 @@ int main(int argc, char*argv[])
 			b = (mousePosY - lastMousePosY) * a;
 			//cout << b;
 			//cout << "B's value" << endl;
-			float xz = pow(cameraPosition[0], 2.0f) + pow(cameraPosition[2], 2.0f);
-			float xzy = xz + pow(cameraPosition[1], 2.0f);
+			xz = pow(cameraPosition[0], 2.0f) + pow(cameraPosition[2], 2.0f);
+			xzy = xz + pow(cameraPosition[1], 2.0f);
 			radius = (sqrt(xzy) - radiusLeftClick);
 			//cout.precision(5);
 			//cout<< mousePosY <<endl;
