@@ -325,8 +325,8 @@ int main(int argc, char*argv[])
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 #endif
 
-	// Create Window and rendering context using GLFW, resolution is 800x600
-	GLFWwindow* window = glfwCreateWindow(1024, 768, "Comp371 - Lab 02", NULL, NULL);
+	// Create Window and rendering context using GLFW, resolution is 1024*768
+	GLFWwindow* window = glfwCreateWindow(1024, 768, "Comp371 - HomeWork", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cerr << "Failed to create GLFW window" << std::endl;
@@ -378,6 +378,7 @@ int main(int argc, char*argv[])
 	float olfY = 0.0f;
 	float olfZ = 0.0f;
 	float olfSize = 1.0f;
+	float olfSize2 = 1.0f;
 	float fullRota = 0.0f;
 
 	//bools
@@ -416,6 +417,20 @@ int main(int argc, char*argv[])
 		glm::mat4 gripScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 0.0f, 0.0f));
 		glm::mat4 gripRotateMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		GLuint worldMatrixLoaction = glGetUniformLocation(shaderProgram, "worldMatrix");
+		glm::mat4 mainTransformationWorldMatrix= glm::translate(mainTransformationWorldMatrix, glm::vec3(olfX, olfY, olfZ));
+		glm::mat4 upScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(olfSize2, olfSize2, olfSize2));
+		upScaleMatrix =  upScaleMatrix;
+
+		//olaf center matrix
+		glm::mat4 olfTranslationMatrix = glm::mat4(1.0f);
+		glm::mat4 olfscaleMatrix = glm::mat4(1.0f);
+		glm::mat4 olfRotationMatrix = glm::mat4(1.0f);
+		glm::mat4 olfTranslateMatrix = glm::mat4(1.0f);
+		olfscaleMatrix= glm::scale(olfscaleMatrix, glm::vec3(olfSize2, olfSize2, olfSize2));
+		olfRotationMatrix= glm::rotate(olfRotationMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
+		olfTranslateMatrix= glm::translate(olfTranslateMatrix, glm::vec3(olfX, olfY, olfZ));
+		olfTranslationMatrix = olfTranslationMatrix * olfTranslateMatrix * olfRotationMatrix * olfscaleMatrix;
+
 
 
 		//olaf Head matrix
@@ -423,19 +438,19 @@ int main(int argc, char*argv[])
 		glm::mat4 olfHeadTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHeadScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHeadRotationWorldMatrix = glm::mat4(1.0f);
-		olfHeadTransformationWorldMatrix = glm::translate(olfHeadTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 3.4f, olfZ + 0.0f));
+		olfHeadTransformationWorldMatrix = glm::translate(olfHeadTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
 		olfHeadScaleWorldMatrix = glm::scale(olfHeadScaleWorldMatrix, glm::vec3(olfSize * 0.8f, olfSize * 0.65f, olfSize * 0.67f));
 		olfHeadRotationWorldMatrix = glm::rotate(olfHeadRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfHeadWorldMatrix = worldMatrix *olfHeadTransformationWorldMatrix * olfHeadRotationWorldMatrix * olfHeadScaleWorldMatrix;
+		olfHeadWorldMatrix = olfTranslationMatrix *worldMatrix*olfHeadTransformationWorldMatrix * olfHeadRotationWorldMatrix  * olfHeadScaleWorldMatrix;
 		//eye , nose and hair
 		glm::mat4 olfEyesWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfEyesTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfEyesScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfEyesRotationWorldMatrix = glm::mat4(1.0f);
-		olfEyesTransformationWorldMatrix = glm::translate(olfEyesTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 3.4f, olfZ + 0.0f));
+		olfEyesTransformationWorldMatrix = glm::translate(olfEyesTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
 		olfEyesScaleWorldMatrix = glm::scale(olfEyesScaleWorldMatrix, glm::vec3(olfSize * 0.2f, olfSize * 0.2f, olfSize * 0.2f));
 		olfEyesRotationWorldMatrix = glm::rotate(olfEyesRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfEyesWorldMatrix = worldMatrix*olfEyesTransformationWorldMatrix * olfEyesRotationWorldMatrix * olfEyesScaleWorldMatrix;
+		olfEyesWorldMatrix = olfTranslationMatrix* worldMatrix*olfEyesTransformationWorldMatrix * olfEyesRotationWorldMatrix  * olfEyesScaleWorldMatrix;
 		//eyes offset
 		glm::mat4 olfLeftEyeTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfRightEyeTransformationWorldMatrix = glm::mat4(1.0f);
@@ -446,10 +461,10 @@ int main(int argc, char*argv[])
 		glm::mat4 olfNoseTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfNoseScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfNoseRotationWorldMatrix = glm::mat4(1.0f);
-		olfNoseTransformationWorldMatrix = glm::translate(olfNoseTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 3.4f, olfZ + 0.0f));
+		olfNoseTransformationWorldMatrix = glm::translate(olfNoseTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
 		olfNoseScaleWorldMatrix = glm::scale(olfNoseScaleWorldMatrix, glm::vec3(olfSize * 0.2f, olfSize * 0.2f, olfSize * 0.4f));
 		olfNoseRotationWorldMatrix = glm::rotate(olfNoseRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfNoseWorldMatrix = worldMatrix * olfNoseTransformationWorldMatrix * olfNoseRotationWorldMatrix * olfNoseScaleWorldMatrix;
+		olfNoseWorldMatrix = olfTranslationMatrix*worldMatrix * olfNoseTransformationWorldMatrix * olfNoseRotationWorldMatrix * olfNoseScaleWorldMatrix;
 		//nose offset
 		glm::mat4 olfNoseOffsetWorldMatrix = glm::mat4(1.0f);
 		olfNoseOffsetWorldMatrix= glm::translate(olfNoseOffsetWorldMatrix, glm::vec3( 0.0f,-0.5f, 1.2f));
@@ -458,10 +473,10 @@ int main(int argc, char*argv[])
 		glm::mat4 olfHairTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHairScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHairRotationWorldMatrix = glm::mat4(1.0f);
-		olfHairTransformationWorldMatrix = glm::translate(olfHairTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 4.0f, olfZ + 0.0f));
+		olfHairTransformationWorldMatrix = glm::translate(olfHairTransformationWorldMatrix, glm::vec3(  0.0f,   4.0f,   0.0f));
 		olfHairScaleWorldMatrix = glm::scale(olfHairScaleWorldMatrix, glm::vec3(olfSize * 0.05f, olfSize * 0.65f, olfSize * 0.05f));
 		olfHairRotationWorldMatrix = glm::rotate(olfHairRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfHairWorldMatrix = worldMatrix * olfHairTransformationWorldMatrix * olfHairRotationWorldMatrix * olfHairScaleWorldMatrix;
+		olfHairWorldMatrix = olfTranslationMatrix*worldMatrix * olfHairTransformationWorldMatrix * olfHairRotationWorldMatrix  * olfHairScaleWorldMatrix;
 		//hair offsets
 		glm::mat4 olfHairOffset1WorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHairOffset2WorldMatrix = glm::mat4(1.0f);
@@ -472,21 +487,21 @@ int main(int argc, char*argv[])
 		glm::mat4 olfMidBodyTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfMidBodyScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfMidBodyRotationWorldMatrix = glm::mat4(1.0f);
-		olfMidBodyTransformationWorldMatrix = glm::translate(olfMidBodyTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 2.8f, olfZ + 0.0f));
+		olfMidBodyTransformationWorldMatrix = glm::translate(olfMidBodyTransformationWorldMatrix, glm::vec3(  0.0f,   2.8f,   0.0f));
 		olfMidBodyScaleWorldMatrix = glm::scale(olfMidBodyScaleWorldMatrix, glm::vec3(olfSize * 1.0f, olfSize * 0.65f, olfSize * 0.75f));
 		olfMidBodyRotationWorldMatrix = glm::rotate(olfMidBodyRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfMidBodyWorldMatrix = worldMatrix * olfMidBodyTransformationWorldMatrix * olfMidBodyRotationWorldMatrix * olfMidBodyScaleWorldMatrix;
-
+		olfMidBodyWorldMatrix = olfTranslationMatrix* worldMatrix * olfMidBodyTransformationWorldMatrix * olfMidBodyRotationWorldMatrix * olfMidBodyScaleWorldMatrix;
+		
 
 		//olaf Body matrix
 		glm::mat4 olfBodyWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfBodyTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfBodyScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfBodyRotationWorldMatrix = glm::mat4(1.0f);
-		olfBodyTransformationWorldMatrix = glm::translate(olfBodyTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 1.5f, olfZ + 0.0f));
+		olfBodyTransformationWorldMatrix = glm::translate(olfBodyTransformationWorldMatrix, glm::vec3(  0.0f,   1.5f,   0.0f));
 		olfBodyScaleWorldMatrix = glm::scale(olfBodyScaleWorldMatrix, glm::vec3(olfSize * 1.5f, olfSize * 2.0f, olfSize * 0.85f));
 		olfBodyRotationWorldMatrix = glm::rotate(olfBodyRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfBodyWorldMatrix = worldMatrix * olfBodyTransformationWorldMatrix * olfBodyRotationWorldMatrix * olfBodyScaleWorldMatrix;
+		olfBodyWorldMatrix = olfTranslationMatrix* worldMatrix * olfBodyTransformationWorldMatrix * olfBodyRotationWorldMatrix  * olfBodyScaleWorldMatrix;
 		//olfWorldMatrix = glm::rotate(olfWorldMatrix, glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 		
 		
@@ -495,10 +510,10 @@ int main(int argc, char*argv[])
 		glm::mat4 olfArmsTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfArmsScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfArmsRotationWorldMatrix = glm::mat4(1.0f);
-		olfArmsTransformationWorldMatrix = glm::translate(olfArmsTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 2.8f, olfZ + 0.0f));
+		olfArmsTransformationWorldMatrix = glm::translate(olfArmsTransformationWorldMatrix, glm::vec3(  0.0f,   2.8f,   0.0f));
 		olfArmsScaleWorldMatrix = glm::scale(olfArmsScaleWorldMatrix, glm::vec3(olfSize * 2.0f, olfSize * 0.2f, olfSize * 0.2f));
 		olfArmsRotationWorldMatrix = glm::rotate(olfArmsRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfArmsWorldMatrix = worldMatrix * olfArmsTransformationWorldMatrix * olfArmsRotationWorldMatrix * olfArmsScaleWorldMatrix;
+		olfArmsWorldMatrix = olfTranslationMatrix* worldMatrix * olfArmsTransformationWorldMatrix * olfArmsRotationWorldMatrix * olfArmsScaleWorldMatrix;
 
 		//Arms Offset matrix
 		glm::mat4 olfLeftArmTransformationWorldMatrix = glm::mat4(1.0f);
@@ -511,10 +526,10 @@ int main(int argc, char*argv[])
 		glm::mat4 olffeetTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olffeetScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olffeetRotationWorldMatrix = glm::mat4(1.0f);
-		olffeetTransformationWorldMatrix = glm::translate(olffeetTransformationWorldMatrix, glm::vec3(olfX + 0.0f, olfY + 0.25f, olfZ + 0.0f));
+		olffeetTransformationWorldMatrix = glm::translate(olffeetTransformationWorldMatrix, glm::vec3(  0.0f,   0.25f,   0.0f));
 		olffeetScaleWorldMatrix = glm::scale(olffeetScaleWorldMatrix, glm::vec3(olfSize * 0.5f, olfSize * 0.5f, olfSize * 0.5f));
 		olffeetRotationWorldMatrix = glm::rotate(olffeetRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olffeetWorldMatrix = worldMatrix * olffeetTransformationWorldMatrix * olffeetRotationWorldMatrix * olffeetScaleWorldMatrix;
+		olffeetWorldMatrix = olfTranslationMatrix* worldMatrix * olffeetTransformationWorldMatrix * olffeetRotationWorldMatrix* olffeetScaleWorldMatrix;
 		
 
 		//feet offsets
@@ -553,7 +568,7 @@ int main(int argc, char*argv[])
 		//Olaf draw
 		if (isTrian) {
 			//Olaf Head
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHeadWorldMatrix[0][0]);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfHeadWorldMatrix)[0][0]);
 			glDrawArrays(GL_TRIANGLES, 8, 36);
 			//Olaf Eyes
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix*olfLeftEyeTransformationWorldMatrix)[0][0]);
@@ -594,10 +609,12 @@ int main(int argc, char*argv[])
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHeadWorldMatrix[0][0]);
 			glDrawArrays(GL_LINES, 8, 36);
 			//Olaf Eyes
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfEyesWorldMatrix[0][0]);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix * olfLeftEyeTransformationWorldMatrix)[0][0]);
+			glDrawArrays(GL_LINES, 44, 36);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix * olfRightEyeTransformationWorldMatrix)[0][0]);
 			glDrawArrays(GL_LINES, 44, 36);
 			//Olaf Nose
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfNoseWorldMatrix[0][0]);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfNoseWorldMatrix * olfNoseOffsetWorldMatrix)[0][0]);
 			glDrawArrays(GL_LINES, 80, 36);
 			//Olaf Hair
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHairWorldMatrix[0][0]);
@@ -626,10 +643,12 @@ int main(int argc, char*argv[])
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHeadWorldMatrix[0][0]);
 			glDrawArrays(GL_POINTS, 8, 36);
 			//Olaf Eyes
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfEyesWorldMatrix[0][0]);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix* olfLeftEyeTransformationWorldMatrix)[0][0]);
+			glDrawArrays(GL_POINTS, 44, 36);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix* olfRightEyeTransformationWorldMatrix)[0][0]);
 			glDrawArrays(GL_POINTS, 44, 36);
 			//Olaf Nose
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfNoseWorldMatrix[0][0]);
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfNoseWorldMatrix* olfNoseOffsetWorldMatrix)[0][0]);
 			glDrawArrays(GL_POINTS, 80, 36);
 			//Olaf Hair
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHairWorldMatrix[0][0]);
@@ -707,8 +726,8 @@ int main(int argc, char*argv[])
 			float xzy = xz + pow(cameraPosition[1], 2.0f);
 			glm::vec3 olfPos(olfX, olfY+3.0f, olfZ);
 			float radius = sqrt(xzy) - radiusLeftClick;
-			cout.precision(5);
-			cout<< radius <<endl;
+			//cout.precision(5);
+			//cout<< radius <<endl;
 			glm::vec3 Pos = olfPos - glm::vec3(radius * cosf(phi) * cosf(theta),
 				radius * sinf(phi),
 				-radius * cosf(phi) * sinf(theta));
@@ -735,7 +754,7 @@ int main(int argc, char*argv[])
 		//}
 		if ((glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) && glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 		{
-			//carOwnX -= 0.1f;
+			//OwnX -= 0.1f;
 			olfX -= 0.1f * sin(glm::radians(90 + fullRota));
 			olfZ -= 0.1f * cos(glm::radians(90 + fullRota));
 		}else if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
@@ -748,7 +767,7 @@ int main(int argc, char*argv[])
 
 		if ((glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) && glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		{
-			//carOwnX += 0.1f;
+			//OwnX += 0.1f;
 			olfX += 0.1f * sin(glm::radians(90 + fullRota));
 			olfZ += 0.1f * cos(glm::radians(90 + fullRota));
 			/*
@@ -871,6 +890,19 @@ int main(int argc, char*argv[])
 
 
 
+		}
+
+
+		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+			olfSize2 += 0.1;
+			
+			//upScaleMatrix = glm::scale(upScaleMatrix, glm::vec3(olfSize2 , olfSize2 , olfSize2));
+		}
+		if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
+			olfSize2 -= 0.1;
+			
+			//upScaleMatrix = glm::scale(upScaleMatrix, glm::vec3(olfSize2 , olfSize2 , olfSize2));
+			
 		}
 		
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
