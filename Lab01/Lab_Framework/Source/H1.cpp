@@ -18,7 +18,16 @@
 
 #include <glm/glm.hpp>  // GLM is an optimized math library with syntax to similar to OpenGL Shading Language
 #include <glm/gtc/matrix_transform.hpp> // include this to create transformation matrices
+#include <glm/common.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <FreeImageIO.h>
+
+#include "shaderloader.h"
+#include "OBJloader.h"  //For loading .obj files
+#include "OBJloaderV2.h"
+
 using namespace std;
+
 const char* getVertexShaderSource()
 {
 	// For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
@@ -50,9 +59,50 @@ const char* getFragmentShaderSource()
 		"   FragColor = vec4(vertexColor.r, vertexColor.g, vertexColor.b, 1.0f);"
 		"}";
 }
+const char* getTexturedVertexShaderSource()
+{
+	// For now, you use a string for your shader code, in the assignment, shaders will be stored in .glsl files
+	return
+		"#version 330 core\n"
+		"layout (location = 0) in vec3 aPos;"
+		"layout (location = 1) in vec3 aColor;"
+		"layout (location = 2) in vec2 aUV;"
+		""
+		"uniform mat4 worldMatrix;"
+		"uniform mat4 viewMatrix = mat4(1.0);"  // default value for view matrix (identity)
+		"uniform mat4 projectionMatrix = mat4(1.0);"
+		""
+		"out vec3 vertexColor;"
+		"out vec2 vertexUV;"
+		""
+		"void main()"
+		"{"
+		"   vertexColor = aColor;"
+		"   mat4 modelViewProjection = projectionMatrix * viewMatrix * worldMatrix;"
+		"   gl_Position = modelViewProjection * vec4(aPos.x, aPos.y, aPos.z, 1.0);"
+		"   vertexUV = aUV;"
+		"}";
+}
+
+const char* getTexturedFragmentShaderSource()
+{
+	return
+		"#version 330 core\n"
+		"in vec3 vertexColor;"
+		"in vec2 vertexUV;"
+		"uniform sampler2D textureSampler;"
+		"uniform sampler2D texture0;"
+		""
+		"out vec4 FragColor;"
+		"void main()"
+		"{"
+		"   vec4 textureColor = texture( textureSampler, vertexUV );"
+		"   FragColor = textureColor ;"
+		"}";
+}
 
 
-int compileAndLinkShaders()
+int compileAndLinkShaders(const char* vertexShaderSource, const char* fragmentShaderSource)
 {
 	// compile and link shader program
 	// return shader program id
@@ -60,7 +110,6 @@ int compileAndLinkShaders()
 
 	// vertex shader
 	int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	const char* vertexShaderSource = getVertexShaderSource();
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
 
@@ -76,7 +125,6 @@ int compileAndLinkShaders()
 
 	// fragment shader
 	int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	const char* fragmentShaderSource = getFragmentShaderSource();
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader);
 
@@ -106,7 +154,159 @@ int compileAndLinkShaders()
 
 	return shaderProgram;
 }
+void setProjectionMatrix(int shaderProgram, glm::mat4 projectionMatrix)
+{
+	glUseProgram(shaderProgram);
+	GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projection_matrix");
+	glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+}
+void setColorProjectionMatrix(int shaderProgram, glm::mat4 projectionMatrix)
+{
+	glUseProgram(shaderProgram);
+	GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
+	glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+}
+void setViewMatrix(int shaderProgram, glm::mat4 viewMatrix)
+{
+	glUseProgram(shaderProgram);
+	GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "view_matrix");
+	glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+}
+void setColorViewMatrix(int shaderProgram, glm::mat4 viewMatrix)
+{
+	glUseProgram(shaderProgram);
+	GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+	glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+}
+void setWorldMatrix(int shaderProgram, glm::mat4 worldMatrix)
+{
+	glUseProgram(shaderProgram);
+	GLuint worldMatrixLocation = glGetUniformLocation(shaderProgram, "worldMatrix");
+	glUniformMatrix4fv(worldMatrixLocation, 1, GL_FALSE, &worldMatrix[0][0]);
+}
+void setViewPosition(int shader, glm::vec3 viewPosition) {
+	glUseProgram(shader);
+	glUniform3fv(glGetUniformLocation(shader, "view_position"), 1, value_ptr(viewPosition));
+}
 
+void setModelMatrix(int shader, glm::mat4 modelMatrix)
+{
+	glUseProgram(shader);
+	GLuint modelMatrixLocation = glGetUniformLocation(shader, "model_matrix");
+	glUniformMatrix4fv(modelMatrixLocation, 1, GL_FALSE, &modelMatrix[0][0]);
+}
+
+void setObjectColor(int shader, glm::vec3 objectColor) {
+	glUseProgram(shader);
+	glUniform3fv(glGetUniformLocation(shader, "object_color"), 1, value_ptr(objectColor));
+}
+
+void setLightSpaceMatrix(int shader, glm::mat4 lightSpaceMatrix)
+{
+	glUseProgram(shader);
+	GLuint lightSpaceMatrixLocation = glGetUniformLocation(shader, "light_space_matrix");
+	glUniformMatrix4fv(lightSpaceMatrixLocation, 1, GL_FALSE, &lightSpaceMatrix[0][0]);
+}
+
+void setLightPosition(int shader, glm::vec3 lightPosition) {
+	glUseProgram(shader);
+	glUniform3fv(glGetUniformLocation(shader, "light_position"), 1, value_ptr(lightPosition));
+}
+
+void setLightDirection(int shader, glm::vec3 lightDirection) {
+	glUseProgram(shader);
+	glUniform3fv(glGetUniformLocation(shader, "light_direction"), 1, value_ptr(lightDirection));
+}
+
+void setLightColor(int shader, glm::vec3 lightColor) {
+	glUseProgram(shader);
+	glUniform3fv(glGetUniformLocation(shader, "light_color"), 1, value_ptr(lightColor));
+}
+
+void setLightCutoffOuterDegrees(int shader, float lightCutoffOuterDegrees) {
+	glUseProgram(shader);
+	glUniform1f(glGetUniformLocation(shader, "light_cutoff_outer"), cos(glm::radians(lightCutoffOuterDegrees)));
+}
+
+void setLightCutoffInnerDegrees(int shader, float lightCutoffInnerDegrees) {
+	glUseProgram(shader);
+	glUniform1f(glGetUniformLocation(shader, "light_cutoff_inner"), cos(glm::radians(lightCutoffInnerDegrees)));
+}
+
+void setLightNearPlane(int shader, float nearPlane) {
+	glUseProgram(shader);
+	glUniform1f(glGetUniformLocation(shader, "light_near_plane"), nearPlane);
+}
+
+void setLightFarPlane(int shader, float farPlane) {
+	glUseProgram(shader);
+	glUniform1f(glGetUniformLocation(shader, "light_far_plane"), farPlane);
+}
+
+void setShadowMapTexture(int shader, int texture) {
+	glUseProgram(shader);
+	glUniform1i(glGetUniformLocation(shader, "shadow_map"), texture);
+}
+struct TexturedColoredVertex
+{
+	TexturedColoredVertex( glm::vec3 _position,  glm::vec3 _color,  glm::vec2 _uv)
+		: position(_position), color(_color), uv(_uv) {}
+
+	 glm::vec3 position;
+	 glm::vec3 color;
+	 glm::vec2 uv;
+};
+TexturedColoredVertex texturedVertexArray[] = {
+	TexturedColoredVertex(glm::vec3(1.0f,  0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),//0
+	TexturedColoredVertex(glm::vec3(-1.0f, 0.0f,1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)),
+	TexturedColoredVertex(glm::vec3(-1.0f, 0.0f, -1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+	TexturedColoredVertex(glm::vec3(1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)),
+	TexturedColoredVertex(glm::vec3(-1.0f, 0.0f,-1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)),
+	TexturedColoredVertex(glm::vec3(-1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)),//6-1
+};
+int createTexturedCubeVertexBufferObject()
+{
+	// Create a vertex array
+	GLuint texturedvertexArrayObject;
+	glGenVertexArrays(1, &texturedvertexArrayObject);
+	glBindVertexArray(texturedvertexArrayObject);
+
+	// Upload Vertex Buffer to the GPU, keep a reference to it (vertexBufferObject)
+	GLuint vertexBufferObject;
+	glGenBuffers(1, &vertexBufferObject);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferObject);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texturedVertexArray), texturedVertexArray, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0,                   // attribute 0 matches aPos in Vertex Shader
+		3,                   // size
+		GL_FLOAT,            // type
+		GL_FALSE,            // normalized?
+		sizeof(TexturedColoredVertex), // stride - each vertex contain 2 vec3 (position, color)
+		(void*)0             // array buffer offset
+	);
+	glEnableVertexAttribArray(0);
+
+
+	glVertexAttribPointer(1,                            // attribute 1 matches aColor in Vertex Shader
+		3,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(TexturedColoredVertex),
+		(void*)sizeof(glm::vec3)      // color is offseted a vec3 (comes after position)
+	);
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2,                            // attribute 2 matches aUV in Vertex Shader
+		2,
+		GL_FLOAT,
+		GL_FALSE,
+		sizeof(TexturedColoredVertex),
+		(void*)(2 * sizeof(glm::vec3))      // uv is offseted by 2 vec3 (comes after position and color)
+	);
+	glEnableVertexAttribArray(2);
+
+	return vertexBufferObject;
+}
 int createVertexArrayObject()
 {
 	// A vertex is a point on a polygon, it contains positions and other data (eg: colors)
@@ -307,7 +507,128 @@ int createVertexArrayObject()
 	glBindVertexArray(0);
 	return vertexBufferObject;
 }
+int loadTexture(char* imagepath)
+{
+	// Load image using the Free Image library
+	FREE_IMAGE_FORMAT format = FreeImage_GetFileType(imagepath, 0);
+	FIBITMAP* image = FreeImage_Load(format, imagepath);
+	FIBITMAP* image32bits = FreeImage_ConvertTo32Bits(image);
 
+	// Get an available texture index from OpenGL
+	GLuint texture = 0;
+	glGenTextures(1, &texture);
+	assert(texture != 0);
+
+	// Set OpenGL filtering properties (bi-linear interpolation)
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Retrieve width and hight
+	int width = FreeImage_GetWidth(image32bits);
+	int height = FreeImage_GetHeight(image32bits);
+
+	// This will upload the texture to the GPU memory
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height,
+		0, GL_BGRA, GL_UNSIGNED_BYTE, (void*)FreeImage_GetBits(image32bits));
+
+	// Free images
+	FreeImage_Unload(image);
+	FreeImage_Unload(image32bits);
+
+	return texture;
+}
+GLuint setupModelVBO(string path, int& vertexCount) {
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::vec2> UVs;
+
+	//read the vertex data from the model's OBJ file
+	loadOBJ(path.c_str(), vertices, normals, UVs);
+
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO); //Becomes active VAO
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+	//Vertex VBO setup
+	GLuint vertices_VBO;
+	glGenBuffers(1, &vertices_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	//Normals VBO setup
+	GLuint normals_VBO;
+	glGenBuffers(1, &normals_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
+	//UVs VBO setup
+	GLuint uvs_VBO;
+	glGenBuffers(1, &uvs_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+	glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(2);
+
+	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs, as we are using multiple VAOs)
+	vertexCount = vertices.size();
+	return VAO;
+}
+GLuint setupModelEBO(string path, int& vertexCount)
+{
+	vector<int> vertexIndices; //The contiguous sets of three indices of vertices, normals and UVs, used to make a triangle
+	vector<glm::vec3> vertices;
+	vector<glm::vec3> normals;
+	vector<glm::vec2> UVs;
+
+	//read the vertices from the cube.obj file
+	//We won't be needing the normals or UVs for this program
+	loadOBJ2(path.c_str(), vertexIndices, vertices, normals, UVs);
+
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO); //Becomes active VAO
+	// Bind the Vertex Array Object first, then bind and set vertex buffer(s) and attribute pointer(s).
+
+	//Vertex VBO setup
+	GLuint vertices_VBO;
+	glGenBuffers(1, &vertices_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, vertices_VBO);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), &vertices.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(0);
+
+	//Normals VBO setup
+	GLuint normals_VBO;
+	glGenBuffers(1, &normals_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_VBO);
+	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), &normals.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(1);
+
+	//UVs VBO setup
+	GLuint uvs_VBO;
+	glGenBuffers(1, &uvs_VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uvs_VBO);
+	glBufferData(GL_ARRAY_BUFFER, UVs.size() * sizeof(glm::vec2), &UVs.front(), GL_STATIC_DRAW);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (GLvoid*)0);
+	glEnableVertexAttribArray(2);
+
+	//EBO setup
+	GLuint EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, vertexIndices.size() * sizeof(int), &vertexIndices.front(), GL_STATIC_DRAW);
+
+	glBindVertexArray(0); // Unbind VAO (it's always a good thing to unbind any buffer/array to prevent strange bugs), remember: do NOT unbind the EBO, keep it bound to this VAO
+	vertexCount = vertexIndices.size();
+	return VAO;
+}
 
 int main(int argc, char*argv[])
 {
@@ -349,7 +670,9 @@ int main(int argc, char*argv[])
 	
 
 	// Compile and link shaders here ...
-	int shaderProgram = compileAndLinkShaders();
+	int colarShaderProgram = compileAndLinkShaders(getVertexShaderSource(), getFragmentShaderSource());
+	//int lightingShaderProgram= compileAndLinkShaders(lightVertexShaderSource(), lightFragmentShaderSource());
+	int textureShaderProgram = compileAndLinkShaders(getTexturedVertexShaderSource(), getTexturedFragmentShaderSource());
 
 	// Define and upload geometry to the GPU here ...
 	int vbo = createVertexArrayObject();
@@ -393,30 +716,210 @@ int main(int argc, char*argv[])
 	bool isLine = false;
 	float radiusLeftClick = 0.0f;//for camera leftclick zoom in
 
-	//enable backface culling
+	std::string shaderPathPrefix = "../Assets/Shaders/";
+
+	GLuint shaderScene = loadSHADER(shaderPathPrefix + "scene_vertex.glsl", shaderPathPrefix + "scene_fragment.glsl");
+
+	GLuint shaderShadow = loadSHADER(shaderPathPrefix + "shadow_vertex.glsl", shaderPathPrefix + "shadow_fragment.glsl");
+
+
+	string spherePath = "../Assets/Models/sphere.obj";
+	string groundPath = "../Assets/Models/ground.obj";
+
+	GLuint snowTextureID = loadTexture((char*)"../Assets/Textures/snow.jpg");
+	GLuint carrotTextureID = loadTexture((char*)"../Assets/Textures/carrot.jpg");
+
+	int sphereVertices;
+	int groundVertices;
+
+	GLuint sphereVAO = setupModelVBO(spherePath, sphereVertices);
+	GLuint groundVAO = setupModelVBO(groundPath, groundVertices);
+	
+	//depthMap
+	GLuint depthMapFBO;
+	// Get the framebuffer
+	glGenFramebuffers(1, &depthMapFBO);
+	// Dimensions of the shadow texture
+	const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+	// Variable storing index to texture used for shadow mapping
+	GLuint depthMap;
+	// Get the texture
+	glGenTextures(1, &depthMap);
+	// Bind the texture so the next glTex calls affect it
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	// Create the texture and specify it's attributes, including widthn height, components (only depth is stored, no color information)
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	// Set texture sampler parameters.
+	// The two calls below tell the texture sampler inside the shader how to upsample and downsample the texture. Here we choose the nearest filtering option, which means we just use the value of the closest pixel to the chosen image coordinate.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	// The two calls below tell the texture sampler inside the shader how it should deal with texture coordinates outside of the [0, 1] range. Here we decide to just tile the image.
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	// Bind the framebuffer so the next glFramebuffer calls affect it
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	// Attach the depth map texture to the depth map framebuffer
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	// Set texture unit # for shadow map
+	setShadowMapTexture(shaderScene, 0);
+	//*/
+	glm::mat4 projectionMatrix = glm::perspective(70.0f, 1024.0f / 768.0f, 0.01f, 100.0f);
+
+	GLuint projectionMatrixLocation = glGetUniformLocation(colarShaderProgram, "projectionMatrix");
+	glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+	//view Matrix
+	glm::mat4 viewMatrix = lookAt(cameraPosition,  // eye
+		cameraPosition + cameraLookAt,  // center
+		cameraUp);
+	
+	setColorProjectionMatrix(colarShaderProgram, projectionMatrix);
+	setColorProjectionMatrix(textureShaderProgram, projectionMatrix);
+
+
+	setColorViewMatrix(colarShaderProgram, viewMatrix);
+	setColorViewMatrix(textureShaderProgram, viewMatrix);
+	// Set projection matrix on both shaders
+	setProjectionMatrix(shaderScene, projectionMatrix);
+	setProjectionMatrix(shaderShadow, projectionMatrix);
+
+
+	setModelMatrix(shaderScene, glm::mat4(1.0));
+	setModelMatrix(shaderShadow, glm::mat4(1.0));
+	// Set view matrix on both shaders
+
+
+	setViewMatrix(shaderScene, viewMatrix);
+	setViewMatrix(shaderShadow, viewMatrix);
+
+
+	//enable backface culling*/
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	//ther aer other ways to do it and we can specify the rotation of the vertics like couter clock or clock 
 	// Entering Main Loop
-	glm::mat4 worldMatrix = glm::mat4(1.0);
+	
 	while (!glfwWindowShouldClose(window))
 	{
 		// Each frame, reset color of each pixel to glClearColor
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Draw geometry --------------------------------------------------------------------------------------------------------------
-		glUseProgram(shaderProgram);
+		glUseProgram(colarShaderProgram);
 		glBindVertexArray(vbo);
 		/*glbindbuffer(gl_array_buffer, vbo);*/
 
 		float dt = glfwGetTime() - lastFrameTime;
 		lastFrameTime += dt;
+
+		//view matrix
+		const float cameraAngularSpeed = 60.0f;
+		cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
+		cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
+
+		// Clamp vertical angle to [-85, 85] degrees
+		cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
+		if (cameraHorizontalAngle > 360)
+		{
+			cameraHorizontalAngle -= 360;
+		}
+		else if (cameraHorizontalAngle < -360)
+		{
+			cameraHorizontalAngle += 360;
+		}
+
+		float theta = glm::radians(cameraHorizontalAngle);
+		float phi = glm::radians(cameraVerticalAngle);
+
+		//cameraLookAt = glm::vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
+		//glm::vec3 cameraSideVector = glm::cross(cameraLookAt, glm::vec3(0.0f, 1.0f, 0.0f));
+
+		//glm::normalize(cameraSideVector);
+		////view setting
+		//glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, -5.0f));
+		//glm::mat4 viewTransform = glm::translate(viewMatrix, glm::vec3(leftRight, upDown, forwardBack));
+		//viewMatrix = viewTransform * viewMatrix;
+		//GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
+		//glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+
+
+		//projection setting
+		//projectionMatrix = glm::perspective(70.0f, 1024.0f / 768.0f, 0.01f, 100.0f);
+
+		GLuint projectionMatrixLocation = glGetUniformLocation(colarShaderProgram, "projectionMatrix");
+		glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
+		//view Matrix
+		//viewMatrix = lookAt(cameraPosition,  // eye
+		//	cameraPosition + cameraLookAt,  // center
+		//	cameraUp);
+		float xz = pow(cameraPosition[0], 2.0f) + pow(cameraPosition[2], 2.0f);
+		float xzy = xz + pow(cameraPosition[1], 2.0f);
+		glm::vec3 olfPos(olfX, olfY + 3.0f, olfZ);
+		float radius = sqrt(xzy) - radiusLeftClick;
+		//cout.precision(5);
+		//cout<< radius <<endl;
+		glm::vec3 Pos = olfPos - glm::vec3(radius * cosf(phi) * cosf(theta),
+			radius * sinf(phi),
+			-radius * cosf(phi) * sinf(theta));
+		viewMatrix = glm::lookAt(Pos, olfPos, cameraUp);//viewSwitch
+		GLuint viewMatrixLocation = glGetUniformLocation(colarShaderProgram, "viewMatrix");
+		glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+
+		glm::mat4 groundWorldMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.01f, 0.0f)) * glm::scale(glm::mat4(1.0f), glm::vec3(100.0f, 0.02f, 100.0f));
+		
+		setModelMatrix(shaderScene, groundWorldMatrix);
+		setModelMatrix(shaderShadow, groundWorldMatrix);
+		setViewMatrix(shaderScene, viewMatrix);
+		setViewMatrix(shaderShadow, viewMatrix);
+
+
+		setViewPosition(shaderScene, cameraPosition);
+
+
+
+		glm::vec3 lightPosition2(olfX, olfY + 30.0f, olfZ);// the location of the light in 3D space
+		glm::vec3 lightFocus2(olfX, olfY, olfZ);        // the point in 3D space the light "looks" at
+		glm::vec3 lightDirection2 = normalize(lightFocus2 - lightPosition2);
+		float lightAngleOuter = 50.0;
+		float lightAngleInner = 20.0;
+		float lightNearPlane = 5.0f;
+		float lightFarPlane = 80.0f;
+		glm::mat4 lightProjectionMatrix2 = glm::perspective(20.0f, (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, lightNearPlane, lightFarPlane);
+		glm::mat4 lightViewMatrix2 = glm::lookAt(lightPosition2, lightFocus2, glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 lightSpaceMatrix2 = lightProjectionMatrix2 * lightViewMatrix2;
+
+
+		// Set light space matrix on both shaders
+		setLightSpaceMatrix(shaderShadow, lightSpaceMatrix2);
+		setLightSpaceMatrix(shaderScene, lightSpaceMatrix2);
+
+		// Set light far and near planes on scene shader
+		setLightNearPlane(shaderScene, lightNearPlane);
+		setLightFarPlane(shaderScene, lightFarPlane);
+
+		// Set light position on scene shader
+		setLightPosition(shaderScene, lightPosition2);
+
+		// Set light direction on scene shader
+		setLightDirection(shaderScene, lightDirection2);
+
+		// Set light cutoff angles on scene shader
+		setLightCutoffInnerDegrees(shaderScene, lightAngleInner);
+		setLightCutoffOuterDegrees(shaderScene, lightAngleOuter);
+
+		// Set light color on scene shader
+		setLightColor(shaderScene, glm::vec3(1.0, 1.0, 1.0));
+
+		// Set object color on scene shader
+		setObjectColor(shaderScene, glm::vec3(1.0, 1.0, 1.0));
+		//*/
+
 		//grip matrix
 		glm::mat4 gripMatrix = glm::mat4(1.0f);
 		glm::mat4 gripTranslateMatrix = glm::mat4(1.0f);
 		glm::mat4 gripScalingMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(50.0f, 0.0f, 0.0f));
 		glm::mat4 gripRotateMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		GLuint worldMatrixLoaction = glGetUniformLocation(shaderProgram, "worldMatrix");
+		GLuint worldMatrixLoaction = glGetUniformLocation(colarShaderProgram, "worldMatrix");
+		GLuint worldMatrix = glGetUniformLocation(textureShaderProgram, "worldMatrix");
 		glm::mat4 mainTransformationWorldMatrix= glm::translate(mainTransformationWorldMatrix, glm::vec3(olfX, olfY, olfZ));
 		glm::mat4 upScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(olfSize2, olfSize2, olfSize2));
 		upScaleMatrix =  upScaleMatrix;
@@ -439,9 +942,9 @@ int main(int argc, char*argv[])
 		glm::mat4 olfHeadScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHeadRotationWorldMatrix = glm::mat4(1.0f);
 		olfHeadTransformationWorldMatrix = glm::translate(olfHeadTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
-		olfHeadScaleWorldMatrix = glm::scale(olfHeadScaleWorldMatrix, glm::vec3(olfSize * 0.8f, olfSize * 0.65f, olfSize * 0.67f));
+		olfHeadScaleWorldMatrix = glm::scale(olfHeadScaleWorldMatrix, glm::vec3(olfSize * 0.4f, olfSize * 0.4f, olfSize * 0.4f));
 		olfHeadRotationWorldMatrix = glm::rotate(olfHeadRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfHeadWorldMatrix = olfTranslationMatrix *worldMatrix*olfHeadTransformationWorldMatrix * olfHeadRotationWorldMatrix  * olfHeadScaleWorldMatrix;
+		olfHeadWorldMatrix = olfTranslationMatrix *olfHeadTransformationWorldMatrix * olfHeadRotationWorldMatrix  * olfHeadScaleWorldMatrix;
 		//eye , nose and hair
 		glm::mat4 olfEyesWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfEyesTransformationWorldMatrix = glm::mat4(1.0f);
@@ -450,7 +953,7 @@ int main(int argc, char*argv[])
 		olfEyesTransformationWorldMatrix = glm::translate(olfEyesTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
 		olfEyesScaleWorldMatrix = glm::scale(olfEyesScaleWorldMatrix, glm::vec3(olfSize * 0.2f, olfSize * 0.2f, olfSize * 0.2f));
 		olfEyesRotationWorldMatrix = glm::rotate(olfEyesRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfEyesWorldMatrix = olfTranslationMatrix* worldMatrix*olfEyesTransformationWorldMatrix * olfEyesRotationWorldMatrix  * olfEyesScaleWorldMatrix;
+		olfEyesWorldMatrix = olfTranslationMatrix*olfEyesTransformationWorldMatrix * olfEyesRotationWorldMatrix  * olfEyesScaleWorldMatrix;
 		//eyes offset
 		glm::mat4 olfLeftEyeTransformationWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfRightEyeTransformationWorldMatrix = glm::mat4(1.0f);
@@ -464,7 +967,7 @@ int main(int argc, char*argv[])
 		olfNoseTransformationWorldMatrix = glm::translate(olfNoseTransformationWorldMatrix, glm::vec3(  0.0f,   3.4f,   0.0f));
 		olfNoseScaleWorldMatrix = glm::scale(olfNoseScaleWorldMatrix, glm::vec3(olfSize * 0.2f, olfSize * 0.2f, olfSize * 0.4f));
 		olfNoseRotationWorldMatrix = glm::rotate(olfNoseRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfNoseWorldMatrix = olfTranslationMatrix*worldMatrix * olfNoseTransformationWorldMatrix * olfNoseRotationWorldMatrix * olfNoseScaleWorldMatrix;
+		olfNoseWorldMatrix = olfTranslationMatrix * olfNoseTransformationWorldMatrix * olfNoseRotationWorldMatrix * olfNoseScaleWorldMatrix;
 		//nose offset
 		glm::mat4 olfNoseOffsetWorldMatrix = glm::mat4(1.0f);
 		olfNoseOffsetWorldMatrix= glm::translate(olfNoseOffsetWorldMatrix, glm::vec3( 0.0f,-0.5f, 1.2f));
@@ -476,7 +979,7 @@ int main(int argc, char*argv[])
 		olfHairTransformationWorldMatrix = glm::translate(olfHairTransformationWorldMatrix, glm::vec3(  0.0f,   4.0f,   0.0f));
 		olfHairScaleWorldMatrix = glm::scale(olfHairScaleWorldMatrix, glm::vec3(olfSize * 0.05f, olfSize * 0.65f, olfSize * 0.05f));
 		olfHairRotationWorldMatrix = glm::rotate(olfHairRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfHairWorldMatrix = olfTranslationMatrix*worldMatrix * olfHairTransformationWorldMatrix * olfHairRotationWorldMatrix  * olfHairScaleWorldMatrix;
+		olfHairWorldMatrix = olfTranslationMatrix * olfHairTransformationWorldMatrix * olfHairRotationWorldMatrix  * olfHairScaleWorldMatrix;
 		//hair offsets
 		glm::mat4 olfHairOffset1WorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfHairOffset2WorldMatrix = glm::mat4(1.0f);
@@ -488,9 +991,9 @@ int main(int argc, char*argv[])
 		glm::mat4 olfMidBodyScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfMidBodyRotationWorldMatrix = glm::mat4(1.0f);
 		olfMidBodyTransformationWorldMatrix = glm::translate(olfMidBodyTransformationWorldMatrix, glm::vec3(  0.0f,   2.8f,   0.0f));
-		olfMidBodyScaleWorldMatrix = glm::scale(olfMidBodyScaleWorldMatrix, glm::vec3(olfSize * 1.0f, olfSize * 0.65f, olfSize * 0.75f));
+		olfMidBodyScaleWorldMatrix = glm::scale(olfMidBodyScaleWorldMatrix, glm::vec3(olfSize * 0.5f, olfSize * 0.5f, olfSize * 0.5f));
 		olfMidBodyRotationWorldMatrix = glm::rotate(olfMidBodyRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfMidBodyWorldMatrix = olfTranslationMatrix* worldMatrix * olfMidBodyTransformationWorldMatrix * olfMidBodyRotationWorldMatrix * olfMidBodyScaleWorldMatrix;
+		olfMidBodyWorldMatrix = olfTranslationMatrix * olfMidBodyTransformationWorldMatrix * olfMidBodyRotationWorldMatrix * olfMidBodyScaleWorldMatrix;
 		
 
 		//olaf Body matrix
@@ -499,9 +1002,9 @@ int main(int argc, char*argv[])
 		glm::mat4 olfBodyScaleWorldMatrix = glm::mat4(1.0f);
 		glm::mat4 olfBodyRotationWorldMatrix = glm::mat4(1.0f);
 		olfBodyTransformationWorldMatrix = glm::translate(olfBodyTransformationWorldMatrix, glm::vec3(  0.0f,   1.5f,   0.0f));
-		olfBodyScaleWorldMatrix = glm::scale(olfBodyScaleWorldMatrix, glm::vec3(olfSize * 1.5f, olfSize * 2.0f, olfSize * 0.85f));
+		olfBodyScaleWorldMatrix = glm::scale(olfBodyScaleWorldMatrix, glm::vec3(olfSize * 0.8f, olfSize * 0.8f, olfSize * 0.8f));
 		olfBodyRotationWorldMatrix = glm::rotate(olfBodyRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfBodyWorldMatrix = olfTranslationMatrix* worldMatrix * olfBodyTransformationWorldMatrix * olfBodyRotationWorldMatrix  * olfBodyScaleWorldMatrix;
+		olfBodyWorldMatrix = olfTranslationMatrix * olfBodyTransformationWorldMatrix * olfBodyRotationWorldMatrix  * olfBodyScaleWorldMatrix;
 		//olfWorldMatrix = glm::rotate(olfWorldMatrix, glm::radians(90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
 		
 		
@@ -513,7 +1016,7 @@ int main(int argc, char*argv[])
 		olfArmsTransformationWorldMatrix = glm::translate(olfArmsTransformationWorldMatrix, glm::vec3(  0.0f,   2.8f,   0.0f));
 		olfArmsScaleWorldMatrix = glm::scale(olfArmsScaleWorldMatrix, glm::vec3(olfSize * 2.0f, olfSize * 0.2f, olfSize * 0.2f));
 		olfArmsRotationWorldMatrix = glm::rotate(olfArmsRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olfArmsWorldMatrix = olfTranslationMatrix* worldMatrix * olfArmsTransformationWorldMatrix * olfArmsRotationWorldMatrix * olfArmsScaleWorldMatrix;
+		olfArmsWorldMatrix = olfTranslationMatrix * olfArmsTransformationWorldMatrix * olfArmsRotationWorldMatrix * olfArmsScaleWorldMatrix;
 
 		//Arms Offset matrix
 		glm::mat4 olfLeftArmTransformationWorldMatrix = glm::mat4(1.0f);
@@ -529,7 +1032,7 @@ int main(int argc, char*argv[])
 		olffeetTransformationWorldMatrix = glm::translate(olffeetTransformationWorldMatrix, glm::vec3(  0.0f,   0.25f,   0.0f));
 		olffeetScaleWorldMatrix = glm::scale(olffeetScaleWorldMatrix, glm::vec3(olfSize * 0.5f, olfSize * 0.5f, olfSize * 0.5f));
 		olffeetRotationWorldMatrix = glm::rotate(olffeetRotationWorldMatrix, glm::radians(fullRota), glm::vec3(0.0f, 1.0f, 0.0f));
-		olffeetWorldMatrix = olfTranslationMatrix* worldMatrix * olffeetTransformationWorldMatrix * olffeetRotationWorldMatrix* olffeetScaleWorldMatrix;
+		olffeetWorldMatrix = olfTranslationMatrix * olffeetTransformationWorldMatrix * olffeetRotationWorldMatrix* olffeetScaleWorldMatrix;
 		
 
 		//feet offsets
@@ -537,39 +1040,12 @@ int main(int argc, char*argv[])
 		glm::mat4 olfRightfootTransformationWorldMatrix = glm::mat4(1.0f);
 		olfLeftfootTransformationWorldMatrix= glm::translate(olfLeftfootTransformationWorldMatrix, glm::vec3(-0.75f, 0.0f, 0.0f));
 		olfRightfootTransformationWorldMatrix = glm::translate(olfRightfootTransformationWorldMatrix, glm::vec3(0.75f, 0.0f, 0.0f));
-
-
-
-		//draw grip
-		for (int i = 0; i < 100;i++) {
-			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.02f, -50.0f+i));
-			gripMatrix = worldMatrix * gripTranslateMatrix * gripScalingMatrix;
-			glUniformMatrix4fv(worldMatrixLoaction,1,GL_FALSE,&gripMatrix[0][0]);
-			glDrawArrays(GL_LINES, 0, 2);
-			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f + i, -0.02f, 0.0f ));
-			gripMatrix = worldMatrix * gripTranslateMatrix * gripRotateMatrix* gripScalingMatrix;
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &gripMatrix[0][0]);
-			glDrawArrays(GL_LINES, 0, 2);
-		}
-		//draw axis
-
-		//x
-		glm::mat4 axisMatrix = worldMatrix * glm::mat4(1.0f);//axis matrix
-		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
-		glDrawArrays(GL_LINES, 6, 2);
-		//y
-		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
-		glDrawArrays(GL_LINES, 4, 2);
-		//z
-		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
-		glDrawArrays(GL_LINES, 2, 2);
 		
-
+		
+		
 		//Olaf draw
 		if (isTrian) {
-			//Olaf Head
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfHeadWorldMatrix)[0][0]);
-			glDrawArrays(GL_TRIANGLES, 8, 36);
+			/*
 			//Olaf Eyes
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfEyesWorldMatrix*olfLeftEyeTransformationWorldMatrix)[0][0]);
 			glDrawArrays(GL_TRIANGLES, 44, 36);
@@ -585,12 +1061,7 @@ int main(int argc, char*argv[])
 			glDrawArrays(GL_TRIANGLES, 44, 36);
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfHairWorldMatrix * olfHairOffset2WorldMatrix)[0][0]);
 			glDrawArrays(GL_TRIANGLES, 44, 36);
-			//Olaf midBody
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfMidBodyWorldMatrix[0][0]);
-			glDrawArrays(GL_TRIANGLES, 8, 36);
-			//Olaf Body
-			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfBodyWorldMatrix[0][0]);
-			glDrawArrays(GL_TRIANGLES, 8, 36);
+			
 
 			//Olaf feet
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olffeetWorldMatrix * olfLeftfootTransformationWorldMatrix)[0][0]);
@@ -603,7 +1074,170 @@ int main(int argc, char*argv[])
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfArmsWorldMatrix * olfRightArmTransformationWorldMatrix)[0][0]);
 			glDrawArrays(GL_TRIANGLES, 8, 36);
 
+
+			glBindVertexArray(sphereVAO);
+			//Olaf Head
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfHeadWorldMatrix)[0][0]);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf midBody
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfMidBodyWorldMatrix[0][0]);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf Body
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfBodyWorldMatrix[0][0]);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
 			glBindVertexArray(0);
+			// Draw geometry
+			glUseProgram(textureShaderProgram);
+			glActiveTexture(GL_TEXTURE0);
+			GLuint textureLocation = glGetUniformLocation(textureShaderProgram, "textureSampler");
+			glBindTexture(GL_TEXTURE_2D, carrotTextureID);
+			glUniform1i(textureLocation, 0);
+			glBindVertexArray(groundVAO);
+			setWorldMatrix(textureShaderProgram, groundWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+
+			glBindVertexArray(0);//*/
+
+			//===================================================================
+						// Render shadow map
+			
+		// Use proper shader
+			glUseProgram(shaderShadow);
+			// Use proper image output size
+			glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+			// Bind depth map texture as output framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+			// Clear depth data on the framebuffer
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			// Bind geometry
+			glBindVertexArray(sphereVAO);
+			//Olaf Head
+			setModelMatrix(shaderShadow, olfHeadWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf midBody
+			setModelMatrix(shaderShadow, olfMidBodyWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf Body
+			setModelMatrix(shaderShadow, olfBodyWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			glBindVertexArray(0);
+			// Bind geometry
+			glBindVertexArray(vbo);
+			//eyes
+			setModelMatrix(shaderShadow, olfEyesWorldMatrix * olfLeftEyeTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderShadow, olfEyesWorldMatrix * olfRightEyeTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			//nose
+			setModelMatrix(shaderShadow, olfNoseWorldMatrix * olfNoseOffsetWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 80, 36);
+			//Olaf Hair
+			setModelMatrix(shaderShadow,olfHairWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderShadow, olfHairWorldMatrix * olfHairOffset1WorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderShadow, olfHairWorldMatrix * olfHairOffset2WorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			//Olaf feet
+			setModelMatrix(shaderShadow, olffeetWorldMatrix * olfLeftfootTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			setModelMatrix(shaderShadow, olffeetWorldMatrix * olfRightfootTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			//Olaf Arms
+			setModelMatrix(shaderShadow, olfArmsWorldMatrix* olfLeftArmTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			setModelMatrix(shaderShadow, olfArmsWorldMatrix* olfRightArmTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			glBindVertexArray(0);
+
+			glBindVertexArray(groundVAO);
+			// Draw geometry
+			setModelMatrix(shaderShadow, groundWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, groundVertices);
+			// Unbind geometry
+			glBindVertexArray(0);
+
+
+			//*/
+			//================================================================================================================render scene trian`
+			glUseProgram(shaderScene);
+			// Use proper image output size
+			// Side note: we get the size from the framebuffer instead of using WIDTH and HEIGHT because of a bug with highDPI displays
+			int width, height;
+			glfwGetFramebufferSize(window, &width, &height);
+			glViewport(0, 0, width, height);
+			// Bind screen as output framebuffer
+			glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			// Clear color and depth data on framebuffer
+			glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			// Bind depth map texture
+			glActiveTexture(GL_TEXTURE0);
+			// Bind geometry
+			glBindVertexArray(vbo);
+			//eyes
+			setModelMatrix(shaderScene, olfEyesWorldMatrix* olfLeftEyeTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderScene, olfEyesWorldMatrix* olfRightEyeTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			//nose
+			setModelMatrix(shaderScene, olfNoseWorldMatrix* olfNoseOffsetWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 80, 36);
+			//Olaf Hair
+			setModelMatrix(shaderScene, olfHairWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderScene, olfHairWorldMatrix* olfHairOffset1WorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			setModelMatrix(shaderScene, olfHairWorldMatrix* olfHairOffset2WorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 44, 36);
+			//Olaf feet
+			setModelMatrix(shaderScene, olffeetWorldMatrix* olfLeftfootTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			setModelMatrix(shaderScene, olffeetWorldMatrix* olfRightfootTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			//Olaf Arms
+			setModelMatrix(shaderScene, olfArmsWorldMatrix* olfLeftArmTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			setModelMatrix(shaderScene, olfArmsWorldMatrix* olfRightArmTransformationWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 8, 36);
+			//glBindTexture(GL_TEXTURE_2D, depthMap);
+			//GLuint textureLocation = glGetUniformLocation(textureShaderProgram, "shado_wmap");
+			//glUniform1i(textureLocation, 0);
+			
+			/*
+			mat4 cubeWorldMatrix = translate(mat4(1.0f), vec3(lightPosition.x, lightPosition.y, lightPosition.z))*scale(mat4(1.0f), vec3(0.1f, 0.1f, 0.1f));
+			glBindVertexArray(cubeVAO);
+			setModelMatrix(shaderScene, cubeWorldMatrix);
+			glDrawElements(GL_TRIANGLES, cubeVertices, GL_UNSIGNED_INT, 0);*/
+			glBindVertexArray(sphereVAO);
+			//Olaf Head
+			glActiveTexture(GL_TEXTURE1);
+			GLuint textureLocation = glGetUniformLocation(shaderScene, "texture0");
+			//setWorldMatrix(textureShaderProgram, carWorldMatrix);
+			glBindTexture(GL_TEXTURE_2D, snowTextureID);
+			glUniform1i(textureLocation, 1);
+			setModelMatrix(shaderScene, olfHeadWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf midBody
+			setModelMatrix(shaderScene, olfMidBodyWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			//Olaf Body
+			setModelMatrix(shaderScene, olfBodyWorldMatrix);
+			glDrawArrays(GL_TRIANGLES, 0, sphereVertices);
+			// Unbind geometry
+			glBindVertexArray(0);
+			glBindVertexArray(groundVAO);
+			setModelMatrix(shaderScene, groundWorldMatrix);
+			glBindTexture(GL_TEXTURE_2D, snowTextureID);
+			// Draw geometry
+			glDrawArrays(GL_TRIANGLES, 0, groundVertices);
+			glBindTexture(GL_TEXTURE_2D, 0);
+			//========================================*/
+
+
+
+
 		}else if (isLine) {
 			//Olaf Head
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &olfHeadWorldMatrix[0][0]);
@@ -670,70 +1304,49 @@ int main(int argc, char*argv[])
 			glDrawArrays(GL_POINTS, 8, 36);
 			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &(olfArmsWorldMatrix * olfRightArmTransformationWorldMatrix)[0][0]);
 			glDrawArrays(GL_POINTS, 8, 36);
-
+			
 			glBindVertexArray(0);
 		}
+		
+		setColorViewMatrix(colarShaderProgram, viewMatrix);
+		setColorProjectionMatrix(colarShaderProgram, projectionMatrix);
+		glUseProgram(colarShaderProgram);
+
+		//draw grip
+		for (int i = 0; i < 100; i++) {
+			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.02f, -50.0f + i));
+			gripMatrix = gripTranslateMatrix * gripScalingMatrix;
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &gripMatrix[0][0]);
+			glDrawArrays(GL_LINES, 0, 2);
+			gripTranslateMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(-50.0f + i, -0.02f, 0.0f));
+			gripMatrix = gripTranslateMatrix * gripRotateMatrix * gripScalingMatrix;
+			glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &gripMatrix[0][0]);
+			glDrawArrays(GL_LINES, 0, 2);
+		}
+		//draw axis
+
+		//x
+		glm::mat4 axisMatrix = glm::mat4(1.0f);//axis matrix
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 6, 2);
+		//y
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 4, 2);
+		//z
+		glUniformMatrix4fv(worldMatrixLoaction, 1, GL_FALSE, &axisMatrix[0][0]);
+		glDrawArrays(GL_LINES, 2, 2);
+		glBindVertexArray(0);
+		glUseProgram(0);
 		// End Frame
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-
+		
 		// Handle inputs
 		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 			glfwSetWindowShouldClose(window, true);
 
 
-		//view matrix
-		const float cameraAngularSpeed = 60.0f;
-		cameraHorizontalAngle -= dx * cameraAngularSpeed * dt;
-		cameraVerticalAngle -= dy * cameraAngularSpeed * dt;
-
-		// Clamp vertical angle to [-85, 85] degrees
-		cameraVerticalAngle = std::max(-85.0f, std::min(85.0f, cameraVerticalAngle));
-		if (cameraHorizontalAngle > 360)
-		{
-			cameraHorizontalAngle -= 360;
-		}
-		else if (cameraHorizontalAngle < -360)
-		{
-			cameraHorizontalAngle += 360;
-		}
-
-		float theta = glm::radians(cameraHorizontalAngle);
-		float phi = glm::radians(cameraVerticalAngle);
-
-		//cameraLookAt = glm::vec3(cosf(phi) * cosf(theta), sinf(phi), -cosf(phi) * sinf(theta));
-		//glm::vec3 cameraSideVector = glm::cross(cameraLookAt, glm::vec3(0.0f, 1.0f, 0.0f));
-
-		//glm::normalize(cameraSideVector);
-		////view setting
-		//glm::mat4 viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -2.5f, -5.0f));
-		//glm::mat4 viewTransform = glm::translate(viewMatrix, glm::vec3(leftRight, upDown, forwardBack));
-		//viewMatrix = viewTransform * viewMatrix;
-		//GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-		//glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
-
-
-		//projection setting
-			glm::mat4 projectionMatrix = glm::perspective(70.0f, 1024.0f / 768.0f, 0.01f, 100.0f);
-
-			GLuint projectionMatrixLocation = glGetUniformLocation(shaderProgram, "projectionMatrix");
-			glUniformMatrix4fv(projectionMatrixLocation, 1, GL_FALSE, &projectionMatrix[0][0]);
-			//view Matrix
-			glm::mat4 viewMatrix = lookAt(cameraPosition,  // eye
-				cameraPosition + cameraLookAt,  // center
-				cameraUp);
-			float xz = pow(cameraPosition[0], 2.0f) + pow(cameraPosition[2], 2.0f);
-			float xzy = xz + pow(cameraPosition[1], 2.0f);
-			glm::vec3 olfPos(olfX, olfY+3.0f, olfZ);
-			float radius = sqrt(xzy) - radiusLeftClick;
-			//cout.precision(5);
-			//cout<< radius <<endl;
-			glm::vec3 Pos = olfPos - glm::vec3(radius * cosf(phi) * cosf(theta),
-				radius * sinf(phi),
-				-radius * cosf(phi) * sinf(theta));
-			viewMatrix = glm::lookAt(Pos, olfPos, cameraUp);//viewSwitch
-			GLuint viewMatrixLocation = glGetUniformLocation(shaderProgram, "viewMatrix");
-			glUniformMatrix4fv(viewMatrixLocation, 1, GL_FALSE, &viewMatrix[0][0]);
+		
 
 
 		//if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -791,6 +1404,11 @@ int main(int argc, char*argv[])
 			olfY += 0.1f;
 			
 		}
+		else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		{
+			olfX -= 0.1f * sin(glm::radians(-180 + fullRota));
+			olfZ -= 0.1f * cos(glm::radians(-180 + fullRota));
+		}
 		if ((glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS) && glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
 			//carOwnZ += 0.1f;
@@ -798,6 +1416,11 @@ int main(int argc, char*argv[])
 			/*olfX += 0.1f * sin(glm::radians(-180 + fullRota));
 			olfZ += 0.1f * cos(glm::radians(-180 + fullRota));*/
 			olfY -= 0.1f;
+		}
+		else if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		{
+			olfX += 0.1f * sin(glm::radians(-180 + fullRota));
+			olfZ += 0.1f * cos(glm::radians(-180 + fullRota));
 		}
 		if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS)
 		{
@@ -855,7 +1478,7 @@ int main(int argc, char*argv[])
 
 			camRota = 5.0f;
 
-			worldMatrix = glm::rotate(worldMatrix, glm::radians(camRota), glm::vec3(0.0f, 1.0f, 0.0f));
+			olfRotationMatrix = glm::rotate(olfRotationMatrix, glm::radians(camRota), glm::vec3(0.0f, 1.0f, 0.0f));
 
 
 
@@ -867,7 +1490,7 @@ int main(int argc, char*argv[])
 
 			camRota = 5.0f;
 
-			worldMatrix = glm::rotate(worldMatrix, glm::radians(camRota), glm::vec3(0.0f, -1.0f, 0.0f));
+			olfRotationMatrix = glm::rotate(olfRotationMatrix, glm::radians(camRota), glm::vec3(0.0f, -1.0f, 0.0f));
 
 
 
@@ -877,7 +1500,7 @@ int main(int argc, char*argv[])
 
 			camRota = 5.0f;
 
-			worldMatrix = glm::rotate(worldMatrix, glm::radians(camRota), glm::vec3(1.0f,0.0f,0.0f));
+			olfRotationMatrix = glm::rotate(olfRotationMatrix, glm::radians(camRota), glm::vec3(1.0f,0.0f,0.0f));
 
 
 
@@ -886,7 +1509,7 @@ int main(int argc, char*argv[])
 
 			camRota = 5.0f;
 
-			worldMatrix = glm::rotate(worldMatrix, glm::radians(camRota), glm::vec3(-1.0f, 0.0f, 0.0f));
+			olfRotationMatrix = glm::rotate(olfRotationMatrix, glm::radians(camRota), glm::vec3(-1.0f, 0.0f, 0.0f));
 
 
 

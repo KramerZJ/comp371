@@ -1,9 +1,47 @@
 ﻿  H1.cpp
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(363,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(412,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(687,56): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(688,54): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(897,19): warning C4305: '+=': truncation from 'double' to 'float'
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(902,19): warning C4305: '-=': truncation from 'double' to 'float'
-C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(924,36): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\ThirdParty\FreeImage-3170\Source\FreeImage.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (936). Save the file in Unicode format to prevent data loss
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\shaderloader.h(25,10): warning C4477: 'printf' : format string '%s' requires an argument of type 'char *', but variadic argument 1 has type 'std::string'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(20,1): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(208): message : see declaration of 'fopen'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(31,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(39,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(44,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(50,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(60,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(63,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(66,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloader.h(69,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(20,1): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(208): message : see declaration of 'fopen'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(31,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(39,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(45,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(54,1): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(1197): message : see declaration of 'fscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(72,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(75,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(78,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\OBJloaderV2.h(81,1): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(2263): message : see declaration of 'sscanf'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(686,22): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(811,12): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(816,56): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(817,54): warning C4244: '-=': conversion from 'double' to 'float', possible loss of data
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(1520,19): warning C4305: '+=': truncation from 'double' to 'float'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(1525,19): warning C4305: '-=': truncation from 'double' to 'float'
+C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\Source\H1.cpp(1547,36): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
   Labs.vcxproj -> C:\Users\Zijian\Documents\GitHub\comp3712\Lab01\Lab_Framework\VS2017\/../Bin/Labs-Debug.exe
